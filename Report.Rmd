@@ -132,6 +132,5 @@ ggplot(data = data_weekdays, aes(interval,avgSteps))+
 
 ## we can observe that, whereas during weekdays the average number of steps peaks in the 570-1000 minute intervals and then decreases for the rest of the intervals, during the weekends the avg number of steps seems more consistent across intervals, without outstanding peaks.
 
-git remote set-url origin git@github.com:caty-g15/RepData_PeerAssessment1.git
 
 
