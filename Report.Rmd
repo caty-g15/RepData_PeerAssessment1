@@ -1,0 +1,137 @@
+---
+title: 'Reproducible Research: Peer Assessment 1'
+output:
+  html_document:
+    keep_md: true
+  pdf_document: default
+---
+```{r setoptions, echo=TRUE}
+knitr::opts_chunk$set(echo=TRUE,results="show")
+```
+
+# Peer Assessment 1
+
+## **Loading and preprocessing the data**
+```{r load_data}
+library(readr)
+activity <- read_csv("activity.csv")
+```
+
+## Here we calculate the total number of steps per day
+```{r total_step}
+library(dplyr)
+activity_steps<-activity %>%
+  group_by(date)%>%
+  summarise(total_steps=sum(steps, na.rm=TRUE))
+activity_steps
+```
+
+## What is mean total number of steps taken per day? The mean number of steps per day is 9354, while the median is 10395.
+```{r summary1}
+summary(activity_steps$total_steps)
+```
+
+## We construct the histogram to show the distribution of the total steps per day.
+```{r histogram1}
+hist(activity_steps$total_steps,
+     main="Total steps per day",
+     xlab = "Number of steps",
+     breaks = 10,
+     col="magenta")
+```
+## The total number of steps taken per day is 570608.
+```{r sum}
+sum(activity_steps$total_steps)
+```
+
+## **What is the average daily activity pattern?**
+## Now we create a time series plot to visualise the average steps made on 5-minute intervals.
+```{r x}
+x<- activity%>%
+  group_by(interval)%>%
+  summarise(averageSteps=mean(steps, na.rm=TRUE))
+```
+
+```{r plot}
+with(x,plot(interval,averageSteps,
+            pch=23,
+            col="blue",
+            type="l",
+            xlab="5-minute intervals",
+            ylab="Average steps",
+            main="Average daily activity pattern"))
+```
+
+## the 5-minute interval with the most number of steps is 835, witg an average of 206 steps.
+
+```{r max_intervap}
+max_interval<- x[which.max(x$averageSteps), ]
+max_interval
+```
+
+## **Imputing missing values**
+## We have a total of 2304 NA values in the activity dataset.
+```{r NA}
+sum(is.na(activity))
+```
+
+## So in order to fill those NAs, we merge the data set grouped by intervals with the main dataset.
+```{r data_merge}
+data_filled<-merge(activity,x,by="interval")
+data_filled$steps[is.na(data_filled$steps)]<-data_filled$averageSteps
+```
+## And we check that the new dataset has indeed 0 NAs.
+```{r sum2}
+sum(is.na(data_filled))
+```
+
+## Now we are creating a histogram of the total number of steps taken each day, without any NAs.We notice that the plot looks identical as the plot with the NA values.
+```{r data_filled}
+data_filled2<-data_filled%>%
+group_by(date)%>%
+summarize(total_steps2=sum(steps,na.rm=TRUE))
+```
+```{r histogram2}
+hist(data_filled2$total_steps2,
+     main="Total steps per day (without NAs)",
+     xlab = "Number of steps",
+     breaks = 10,
+     col="magenta")
+```
+
+## The median is also the same (10395), but the mean is a little higher, namely 9371. This indicates that the NA values skew the results and make them less accurate. In this case, though, the difference isn't so significant.  
+```{r summary2}
+summary(data_filled2$total_steps2)
+```
+
+## **Are there differences in activity patterns between weekdays and weekends?**
+```{r weekends_weekdays}
+library(dplyr)
+
+unique_days<-unique(data_filled$date)
+day_names<-weekdays(as.Date(unique_days))
+day_names
+
+data_filled<-data_filled%>%
+  mutate(day_name = weekdays(as.Date(date)),
+         day_type = ifelse(day_name %in% c("Saturday", "Sunday"), "weekend", "weekday"))  
+
+data_weekdays<-data_filled%>%
+  group_by(interval,day_type)%>%
+  summarise(avgSteps=mean(steps))
+```
+
+```{r plot2}
+library(ggplot2)
+ggplot(data = data_weekdays, aes(interval,avgSteps))+
+  geom_line()+
+  facet_grid(day_type~.)+
+  labs(x = "5-minute interval",
+       y="Average number of steps")
+```
+
+## we can observe that, whereas during weekdays the average number of steps peaks in the 570-1000 minute intervals and then decreases for the rest of the intervals, during the weekends the avg number of steps seems more consistent across intervals, without outstanding peaks.
+
+git remote set-url origin git@github.com:caty-g15/RepData_PeerAssessment1.git
+
+
